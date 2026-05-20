@@ -1,0 +1,41 @@
+<!-- app/views/game/show.html.erb -->
+<div class="max-w-2xl mx-auto px-4 py-8 min-h-screen flex flex-col justify-between">
+  <!-- Top State Panel: Resource / Reputation tracking -->
+  <header class="border-b border-stone-200 pb-4 mb-6 flex justify-between items-center text-sm font-medium tracking-wide uppercase text-stone-500">
+    <div>Hero: <span class="text-stone-800 font-semibold"><%= @player.name %></span></div>
+    <div>Daura Elders: <span class="text-stone-800 font-semibold"><%= @player.reputation_json.fetch("daura_elders", 0) %></span></div>
+  </header>
+  <!-- Central Game Node Loop -->
+  <%= turbo_frame_tag "game_scene" do %>
+    <main class="flex-grow space-y-6">
+      <h1 class="text-3xl font-bold tracking-tight text-stone-950 mb-2">
+        <%= @room.title %>
+      </h1>
+      <!-- Render parsed markdown body description using Redcarpet helper -->
+      <div class="prose prose-stone lg:prose-lg leading-relaxed text-stone-800 space-y-4">
+        <%= render_markdown(@room.description_md) %>
+      </div>
+      <!-- Dynamic branching choice deck -->
+      <section class="mt-8 pt-6 border-t border-stone-200 space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Your choice:</h2>
+        <% @choices.each do |choice| %>
+          <% if choice.available_to?(@player) %>
+            <%= button_to choose_game_path(choice_identifier: choice.choice_identifier),
+                          method: :post,
+                          data: { turbo_frame: "game_scene" },
+                          class: "choice-card-base choice-card-hover" do %>
+              <span class="text-stone-800 group-hover:text-stone-950 pr-4 font-medium"><%= choice.text %></span>
+              <span class="text-xs font-semibold px-2 py-1 rounded tracking-wide uppercase <%= choice.risk_level == 'high' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-stone-100 text-stone-600' %>">
+                <%= choice.risk_level %> risk
+              </span>
+            <% end %>
+          <% end %>
+        <% end %>
+      </section>
+    </main>
+  <% end %>
+  <!-- Bottom Footprint: Nonfiction historical validation layer -->
+  <footer class="mt-12 pt-4 border-t border-stone-200 text-xs text-stone-400 flex flex-col space-y-1">
+    <div><strong>Historical Context:</strong> Node certified under reference tags: <span class="font-mono bg-stone-100 px-1 py-0.5 rounded text-stone-600"><%= @room.metadata_json["sources"]&.join(", ") %></span></div>
+  </footer>
+</div>

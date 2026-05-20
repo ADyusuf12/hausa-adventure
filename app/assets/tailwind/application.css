@@ -1,0 +1,40 @@
+/* app/assets/tailwind/application.css */
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--color-stone-100);
+    color: var(--color-stone-900);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+/* Custom UI Polish Components */
+@layer components {
+  .choice-card-base {
+    width: 100%;
+    text-align: left;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-stone-200);
+    background-color: white;
+    box-shadow: var(--shadow-sm);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .choice-card-hover:hover {
+    border-color: var(--color-stone-400);
+    background-color: var(--color-stone-50);
+    box-shadow: var(--shadow-md);
+  }
+}
