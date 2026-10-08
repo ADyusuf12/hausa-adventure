@@ -1,0 +1,137 @@
+<main class="w-full max-w-6xl mx-auto flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+      data-controller="ui-feedback">
+  <!-- LEFT COLUMN: MAP GRAPHIC / ILLUSTRATION NODE -->
+  <section class="lg:col-span-5 w-full sticky top-6">
+    <div class="relative overflow-hidden bg-stone-950 border border-stone-900 rounded-2xl shadow-2xl group aspect-4/3 lg:aspect-square">
+      <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent z-10 pointer-events-none mix-blend-multiply"></div>
+      <div class="absolute inset-0 border border-amber-500/10 m-2 rounded-xl z-20 pointer-events-none"></div>
+      <%= image_tag @room.illustration_path,
+                    alt: @room.title,
+                    class: "w-full h-full object-cover opacity-75 group-hover:scale-[1.015] transition-transform duration-1000 ease-out filter brightness-90 contrast-105",
+                    loading: "eager" %>
+      <div class="absolute bottom-4 left-4 z-20 bg-stone-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-stone-800">
+        <span class="text-[9px] tracking-widest uppercase text-amber-500 font-bold font-mono">
+          📍 <%= @room.metadata_json["location"] || "Mythic Era" %>
+        </span>
+      </div>
+    </div>
+  </section>
+  <!-- RIGHT COLUMN: CHRONICLE CONTENT & DYNAMIC SELECTION INTERFACES -->
+  <section class="lg:col-span-7 space-y-6 w-full">
+    <div class="space-y-1">
+      <span class="text-[10px] font-bold tracking-widest uppercase text-amber-600 font-mono">Chronicle Chapter</span>
+      <h1 class="text-3xl font-bold font-serif tracking-wide text-stone-100 sm:text-4xl">
+        <%= @room.title %>
+      </h1>
+    </div>
+    <!-- SATCHEL OVERVIEW COMPARTMENT -->
+    <% if @player.inventory_json.present? %>
+      <div class="flex items-center gap-3 p-3 bg-stone-900/40 border border-stone-900/80 rounded-xl select-none animate-fade-in">
+        <span class="text-[9px] font-bold text-stone-500 uppercase tracking-widest font-mono pl-1">Inventory:</span>
+        <div class="flex flex-wrap gap-2">
+          <% @player.inventory_json.each do |item_slug| %>
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-medium px-2.5 py-1 bg-amber-950/40 text-amber-400 border border-amber-600/20 rounded-lg shadow-inner">
+              <%= item_slug.titleize %>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <!-- SCENE PROSE CONTAINER -->
+    <div class="prose prose-invert prose-stone max-w-none text-stone-300 font-serif leading-relaxed text-base sm:text-lg space-y-4
+                prose-headings:text-stone-100 prose-strong:text-amber-500 prose-strong:font-semibold">
+      <%= render_markdown(@room.description_md) %>
+    </div>
+    <!-- INTERACTION & END STATE VIEWPORT TERMINUS -->
+    <section class="pt-6 border-t border-stone-900 space-y-3">
+      <% if @room.metadata_json["end_state"] == true %>
+        <!-- NARRATIVE END STATE REACHED: SCORE EVALUATION ENGINE -->
+        <div class="bg-gradient-to-b from-stone-900/40 to-stone-950/20 border border-stone-800 rounded-2xl p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden animate-fade-in">
+          <div class="text-center space-y-1 pb-4 border-b border-stone-900/60">
+            <span class="text-[10px] font-mono font-bold tracking-widest text-amber-500 uppercase">Chronicle Concluded</span>
+            <p class="text-stone-400 font-serif italic text-sm">Your footprints are cast permanently into the foundation myths of Daura.</p>
+          </div>
+          <% elders_score = @player.reputation_for("daura_elders") %>
+          <% army_score = @player.reputation_for("daura_army") %>
+          <% if elders_score >= army_score %>
+            <!-- PATH OF HIKIMA (ELDERS) DETAILED CONTEXT -->
+            <div class="space-y-3 relative group">
+              <div class="absolute -right-4 -bottom-6 text-7xl opacity-[0.02] font-mono select-none">📜</div>
+              <div class="inline-flex items-center gap-2 text-amber-500 font-mono text-[10px] tracking-widest uppercase font-bold bg-amber-950/30 px-2.5 py-1 rounded border border-amber-900/40">
+                <span>📜 MAI HIKIMA</span>
+                <span class="text-stone-500">•</span>
+                <span>Council Alignment</span>
+              </div>
+              <h3 class="text-xl font-bold text-stone-100 font-mono tracking-wide">The Sovereign Councilor</h3>
+              <p class="text-stone-400 font-serif leading-relaxed text-sm sm:text-base">
+                "You ruled not with the blade, but with the weight of tradition. The walls of Daura stood protected by treaties, wisdom, and the blessings of the elders." Guided by ancestral favor, your legacy stabilizes the outer markets and establishes a legacy of shared council that will protect Queen Daurama's domain through law, consensus, and peace[cite: 9, 14].
+              </p>
+            </div>
+          <% else %>
+            <!-- PATH OF RINJAYE (ARMY) DETAILED CONTEXT -->
+            <div class="space-y-3 relative group">
+              <div class="absolute -right-4 -bottom-6 text-7xl opacity-[0.02] font-mono select-none">🛡️</div>
+              <div class="inline-flex items-center gap-2 text-red-400 font-mono text-[10px] tracking-widest uppercase font-bold bg-red-950/30 px-2.5 py-1 rounded border border-red-900/40">
+                <span>🛡️ MAI RINJAYE</span>
+                <span class="text-stone-500">•</span>
+                <span>Vanguard Command</span>
+              </div>
+              <h3 class="text-xl font-bold text-stone-100 font-mono tracking-wide">The Vanguard Commander</h3>
+              <p class="text-stone-400 font-serif leading-relaxed text-sm sm:text-base">
+                "Your footsteps shook the earth. You forged an unyielding wall of iron, securing your dominion through raw strength and tactical conquest." Backed by the young trackers and regional smithies, you establish full tactical oversight across the trade tracks, transforming the clay citadel into an unassailable bastion of absolute martial order[cite: 9, 13].
+              </p>
+            </div>
+          <% end %>
+          <div class="pt-4 flex justify-center">
+            <%= button_to restart_game_path,
+                          method: :post,
+                          data: { turbo: false },
+                          class: "px-6 py-3 bg-gradient-to-r from-amber-800 to-amber-950 hover:from-amber-700 hover:to-amber-900 text-stone-200 hover:text-stone-100 font-mono text-xs font-bold tracking-widest uppercase rounded-xl border border-amber-600/30 hover:border-amber-500/50 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer" do %>
+              🔄 Begin a New Lineage
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <!-- REGULAR NARRATIVE NAVIGATION: OPTIONS CHOICE LIST LOOP -->
+        <h2 class="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2 font-mono">Decide Your Strategy:</h2>
+        <% @choices.each_with_index do |choice, index| %>
+          <% choice_letter = ("A".."Z").to_a[index] || "•" %>
+          <% if choice.available_to?(@player) %>
+            <%= button_to choose_game_path(choice_identifier: choice.choice_identifier),
+                          method: :post,
+                          data: {
+                            turbo_frame: "game_scene",
+                            ui_feedback_target: "choiceButton",
+                            action: "click->ui-feedback#execute"
+                          },
+                          class: "w-full text-left bg-gradient-to-r from-stone-900/60 to-stone-900/20 hover:from-stone-900/90 hover:to-amber-950/20 border border-stone-900 hover:border-amber-600/40 rounded-xl cursor-pointer transition-all duration-300 flex items-stretch group overflow-hidden shadow-lg relative min-h-[72px]" do %>
+              <div class="bg-stone-950/60 group-hover:bg-amber-950/40 border-r border-stone-900 group-hover:border-amber-600/30 px-4 flex items-center justify-center transition-colors shrink-0 select-none">
+                <span class="font-mono text-xs font-bold tracking-wider text-stone-500 group-hover:text-amber-500"><%= choice_letter %></span>
+              </div>
+              <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-grow">
+                <span class="text-stone-300 font-medium group-hover:text-stone-100 font-serif leading-snug transform group-hover:translate-x-1 transition-all duration-300 pr-2"><%= choice.text %></span>
+                <div class="shrink-0 flex items-center select-none">
+                  <span class="text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded font-mono border <%= choice.risk_level == 'high' ? 'bg-red-950/30 text-red-400 border-red-900/40 group-hover:border-red-700/60' : 'bg-stone-950 text-stone-500 border-stone-800/80 group-hover:border-stone-700/60' %>">
+                    <%= choice.risk_level %> risk
+                  </span>
+                </div>
+              </div>
+              <div class="absolute right-0 top-0 bottom-0 w-[2px] bg-transparent group-hover:bg-amber-500/60 transition-colors"></div>
+            <% end %>
+          <% else %>
+            <!-- FALLBACK CONTAINER FOR LOCKED REPUTATION STATES -->
+            <div class="w-full text-left bg-stone-950/20 border border-stone-950/60 rounded-xl flex items-stretch min-h-[72px] opacity-40 select-none cursor-not-allowed">
+              <div class="bg-stone-950/40 border-r border-stone-900/60 px-4 flex items-center justify-center shrink-0">
+                <span class="font-mono text-xs font-bold text-stone-700"><%= choice_letter %></span>
+              </div>
+              <div class="p-4 flex flex-col justify-center flex-grow">
+                <span class="text-stone-600 font-serif line-through decoration-stone-800/80 text-sm leading-snug pr-2"><%= choice.text %></span>
+                <span class="text-[8px] font-mono tracking-wider text-amber-800 uppercase font-semibold mt-1">🔒 Requires specialized standing or specific inventory artifacts</span>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      <% end %>
+    </section>
+  </section>
+</main>

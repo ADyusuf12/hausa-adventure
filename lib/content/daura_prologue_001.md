@@ -6,7 +6,6 @@ location: "Daura"
 sources:
   - "bayajidda-oral-collection"
   - "daura-chronicle-1870"
-reviewer_id: "dr-aliyu-maikano"
 verified: true
 tags:
   - "historical"
@@ -25,10 +24,9 @@ Your journey has led you to this choice. The future of the state hinges on your 
 ### choice_id: consult_diviner
 
 - **Text:** "Seek out the local elder and diviner near the marketplace to read the cosmic signs."
-- **Conditions:** []
+- **Conditions:**
+  - `unless_item`: "sacred-charm"
 - **Risk Level:** "low"
-- **Effects:**
-  - `reputation_modifier`: {"daura_elders": 5}
 - **Goto:** "diviner-hut-prologue"
 
 ### choice_id: face_serpent
@@ -40,3 +38,15 @@ Your journey has led you to this choice. The future of the state hinges on your 
 - **Roll Type:** "cowrie_combat"
 - **Success Route:** "serpent-defeated"
 - **Failure Route:** "serpent-curse-prologue"
+
+### choice_id: trade_with_caravan
+
+- **Text:** "Approach the dynamic Tuareg caravan masters setting up tents nearby to see if they possess foreign weapons."
+- **Risk Level:** "low"
+- **Goto:** "caravan-bazaar"
+
+### choice_id: visit_weavers
+
+- **Text:** "Head down the corridor of the artisans into the Weaver's Guild Ward to seek local faction backing."
+- **Risk Level:** "low"
+- **Goto:** "weavers-guild-ward"
