@@ -1,0 +1,65 @@
+<%= turbo_frame_tag "game_scene" do %>
+  <div data-controller="cowrie-roll"
+       class="max-w-xl mx-auto bg-stone-950 border border-stone-900 rounded-2xl shadow-2xl my-6 overflow-hidden relative select-none animate-fade-in">
+    <div class="absolute inset-0 border border-amber-500/5 m-2 rounded-xl pointer-events-none z-20"></div>
+    <div class="p-6 text-center border-b border-stone-900 bg-stone-950/90 relative z-10">
+      <span class="text-[10px] font-mono font-bold tracking-widest text-amber-600 uppercase block mb-1">Fate Encounter</span>
+      <h2 class="text-2xl font-serif tracking-wide text-stone-100">Consulting the Decree</h2>
+      <p class="text-xs text-stone-500 font-serif italic mt-1.5 max-w-sm mx-auto">
+        The spirits read your path: <span class="text-stone-300">"<%= @choice.text %>"</span>
+      </p>
+    </div>
+    <div class="relative h-64 bg-stone-950 flex items-center justify-center overflow-hidden border-b border-stone-900">
+      <div class="absolute inset-0 opacity-30 mix-blend-lighten pointer-events-none z-0">
+        <%= image_tag "game/cowrie-divination-mat.png",
+                      alt: "Divination Array Sketch",
+                      class: "w-full h-full object-cover filter contrast-125 brightness-75" %>
+      </div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_25%,#0c0a09_98%)] z-10 pointer-events-none"></div>
+      <div data-cowrie-roll-target="sandbox"
+           class="grid grid-cols-4 gap-6 sm:gap-8 px-8 items-center justify-center w-full max-w-md h-full relative z-20 perspective-distant">
+        <% @roll_result[:rolls].each_with_index do |is_up, index| %>
+          <div class="w-16 h-20 relative preserve-3d cursor-default"
+               data-cowrie-roll-target="shell"
+               data-face="<%= is_up %>"
+               data-index="<%= index %>">
+            <div class="shell-inner w-full h-full absolute transition-transform duration-700 preserve-3d">
+              <div class="absolute inset-0 rounded-[50%_50%_45%_45%] bg-gradient-to-b from-stone-200 via-stone-300 to-stone-400 border border-stone-400/40 shadow-[inset_-2px_-4px_8px_rgba(0,0,0,0.3),4px_8px_12px_rgba(0,0,0,0.4)] flex items-center justify-center backface-hidden">
+                <div class="w-[3px] h-4/5 bg-stone-400/30 blur-[0.5px] rounded-full"></div>
+              </div>
+              <div class="absolute inset-0 rounded-[50%_50%_45%_45%] bg-gradient-to-b from-amber-50 via-stone-200 to-stone-300 border border-stone-400/50 shadow-[inset_2px_4px_10px_rgba(0,0,0,0.4),0_6px_10px_rgba(0,0,0,0.5)] flex items-center justify-center backface-hidden rotate-y-180">
+                <div class="w-4 h-4/5 bg-gradient-to-r from-stone-900 via-stone-950 to-stone-900 rounded-full relative overflow-hidden flex flex-col justify-between py-2 items-center">
+                  <div class="w-full h-[1px] bg-stone-700/60"></div>
+                  <div class="w-full h-[1px] bg-stone-700/60"></div>
+                  <div class="w-full h-[1px] bg-stone-700/60"></div>
+                  <div class="w-full h-[1px] bg-stone-700/60"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div class="p-6 bg-stone-950/40 text-center space-y-4 min-h-[130px] flex flex-col justify-center relative z-10">
+      <div data-cowrie-roll-target="result" class="opacity-0 space-y-1.5 transition-all duration-500 scale-95">
+        <span class="text-[10px] font-mono tracking-widest text-stone-500 uppercase block">Decree Attained</span>
+        <h3 class="text-xl font-mono font-bold tracking-wide">
+          <% if @roll_result[:passed] %>
+            <span class="text-amber-500 font-extrabold drop-shadow-[0_0_12px_rgba(245,158,11,0.25)]">FAVORABLE ALIGNMENT</span>
+          <% else %>
+            <span class="text-stone-500 font-bold uppercase">Unresponsive Spirits</span>
+          <% end %>
+          <span class="text-xs text-stone-400 font-normal block mt-1 font-sans">(<%= @roll_result[:up_count] %> of 4 open apertures revealed)</span>
+        </h3>
+      </div>
+      <div data-cowrie-roll-target="button" class="opacity-0 pointer-events-none transition-all duration-500 translate-y-2">
+        <%= button_to resolve_roll_game_path(roll_token: @roll_result[:token]),
+                      method: :post,
+                      data: { turbo_frame: "game_scene" },
+                      class: "w-full max-w-sm mx-auto py-3 px-6 bg-gradient-to-r from-stone-900 to-stone-800 hover:from-stone-800 hover:to-stone-700 text-stone-200 hover:text-stone-100 font-mono text-xs font-bold uppercase tracking-widest rounded-xl border border-stone-800 hover:border-amber-600/30 transition-all duration-300 shadow-xl cursor-pointer" do %>
+          Accept the Decree
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

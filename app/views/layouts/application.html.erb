@@ -1,43 +1,42 @@
 <!DOCTYPE html>
-<html class="h-full bg-stone-100">
+<html class="h-full bg-stone-950">
   <head>
     <title><%= content_for(:title) || "Kusugu: A Hausa Interactive History" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="application-name" content="Kusugu Engine">
-    <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
-    <!-- Google Fonts: Serif for titles, Sans for crisp text execution -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <!-- CSS / JavaScript Assets -->
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-    <!-- Custom Font Mapping Overrides for Tailwind -->
     <style>
       body { font-family: 'Plus Jakarta Sans', sans-serif; }
       .font-serif { font-family: 'Playfair Display', serif; }
+      /* Immersive custom scrollbar matching our charcoal vibe */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #0c0a09; }
+      ::-webkit-scrollbar-thumb { background: #292524; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #78350f; }
     </style>
   </head>
-  <body class="h-full min-h-screen bg-stone-100 selection:bg-amber-200 selection:text-stone-900 antialiased">
-    <!-- Toast Notices Wrapper for Engine/Game Alerts -->
+  <body class="h-full min-h-screen bg-stone-950 text-stone-200 selection:bg-amber-500/30 selection:text-amber-200 antialiased">
     <% if flash[:alert] %>
-      <div id="flash-alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-11/12 bg-red-900 text-red-100 px-4 py-3 rounded-xl shadow-lg text-sm font-medium border border-red-800 flex justify-between items-center" data-turbo-cache="false">
-        <span><%= flash[:alert] %></span>
-        <button onclick="this.parentElement.remove()" class="text-red-300 hover:text-white ml-3 font-bold">&times;</button>
+      <div id="flash-alert" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-11/12 bg-red-950/90 text-red-200 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium border border-red-800/50 backdrop-blur-md flex justify-between items-center animate-fade-in" data-turbo-cache="false">
+        <span>⚠️ <%= flash[:alert] %></span>
+        <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-white ml-3 font-bold">&times;</button>
       </div>
     <% end %>
     <% if flash[:notice] %>
-      <div id="flash-notice" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-11/12 bg-stone-900 text-stone-100 px-4 py-3 rounded-xl shadow-lg text-sm font-medium border border-stone-800 flex justify-between items-center" data-turbo-cache="false">
-        <span><%= flash[:notice] %></span>
+      <div id="flash-notice" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-11/12 bg-stone-900/90 text-amber-200 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium border border-amber-600/30 backdrop-blur-md flex justify-between items-center animate-fade-in" data-turbo-cache="false">
+        <span>📜 <%= flash[:notice] %></span>
         <button onclick="this.parentElement.remove()" class="text-stone-400 hover:text-white ml-3 font-bold">&times;</button>
       </div>
     <% end %>
-    <!-- Primary Canvas Wrapper (Removes the top margin restriction entirely) -->
     <%= yield %>
   </body>
 </html>

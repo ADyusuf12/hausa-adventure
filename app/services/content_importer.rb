@@ -1,4 +1,3 @@
-# app/services/content_importer.rb
 require "yaml"
 
 class ContentImporter
@@ -17,10 +16,15 @@ class ContentImporter
     scene_text, choices_text = body_content.split("## Choices", 2)
 
     room = Room.find_or_initialize_by(slug: metadata["id"])
+
+    # Check for an explicit frontmatter image key, or build a clean default fallback name
+    assigned_image = metadata["illustration"] || "illustrations/#{metadata['id']}.png"
+
     room.update!(
       title: metadata["title"],
       description_md: scene_text.strip,
-      metadata_json: metadata.except("id", "title")
+      image_filename: assigned_image,
+      metadata_json: metadata.except("id", "title", "illustration") # Keeps metadata clean!
     )
 
     # Clear out existing choices to ensure clean database tracking updates
@@ -41,26 +45,58 @@ class ContentImporter
     blocks.shift # Remove anything before the first choice block definition
 
     blocks.each do |block|
-      lines = block.strip.split("\n")
+      lines = block.split("\n")
       identifier = lines.shift.strip # Extracts choice identifier cleanly
 
       data = {
         "Text" => "Continue...",
         "Risk Level" => "low",
         "Goto" => room.slug,
-        "Conditions" => {},
+        "Conditions" => [],
         "Effects" => {}
       }
 
-      # Process lines inside this specific choice block context
-      lines.each do |line|
-        clean_line = line.strip.gsub(/^[\*\-\s]+/, "") # Wipes bullet point markers out
-        next if clean_line.blank?
+      current_mode = :standard
+      collected_conditions = []
+      collected_effects = []
 
+      lines.each do |line|
+        raw_line = line.dup
+        stripped = line.strip
+        next if stripped.blank?
+
+        # Normalize line to robustly verify block headers
+        normalized = stripped.downcase.gsub(/[\*\_\`\:]/, "")
+
+        if normalized.start_with?("- conditions") || normalized.start_with?("conditions")
+          current_mode = stripped.include?("[]") || stripped.include?("{}") ? :standard : :conditions
+          next
+        end
+
+        if normalized.start_with?("- effects") || normalized.start_with?("effects")
+          current_mode = stripped.include?("[]") || stripped.include?("{}") ? :standard : :effects
+          next
+        end
+
+        # Escape sub-modes cleanly if we hit a standard top-level property line
+        if stripped.start_with?("-") && stripped.include?(":") && !raw_line.start_with?(" ", "\t")
+          current_mode = :standard
+        end
+
+        # Route elements to isolated structural block collections
+        case current_mode
+        when :conditions
+          collected_conditions << line
+          next
+        when :effects
+          collected_effects << line
+          next
+        end
+
+        # Parse standard flat fallback keys on the main block body
+        clean_line = stripped.gsub(/^[\*\-\s]+/, "")
         if clean_line.include?(":")
           key_part, val_part = clean_line.split(":", 2)
-
-          # Strips out markdown bolding flags (**), backticks, and asterisks cleanly from the key strings
           key = key_part.gsub(/[\*\`\_\s]/, "").downcase
           val = val_part.strip.gsub(/^[\s"\*\-]+|[\s"\*\-]+$/, "").strip
 
@@ -77,30 +113,55 @@ class ContentImporter
             data["Success Route"] = val
           when "failureroute"
             data["Failure Route"] = val
-            when "conditions"
-            begin
-              data["Conditions"] = YAML.safe_load(val_part.strip) || {}
-            rescue => _e
-              data["Conditions"] = {}
-            end
           end
         end
       end
 
-      # Parse out complex nested block dictionary formatting styles like our custom inline reputation rules
-      if effect_match = block.match(/(?:effects):\s*\n([\s\S]*?)(?=\n\s*\*|\n\s*###|\z)/i)
+      # Compile Isolated Sub-Mode Condition Blocks
+      if collected_conditions.any?
         begin
-          data["Effects"] = YAML.safe_load(effect_match[1]) || {}
-        rescue => _e
-          data["Effects"] = {}
+          # Strip styling backticks out to maintain standard YAML readability
+          raw_yaml = collected_conditions.map { |l| l.gsub("`", "") }.join("\n")
+          parsed = YAML.safe_load(raw_yaml)
+
+          # Convert standard array lists or mapped hashes into an integrated collection
+          data["Conditions"] = parsed.is_a?(Hash) ? [parsed] : Array(parsed)
+        rescue => e
+          Rails.logger.error "❌ [Importer] Failed to parse Conditions for choice [#{identifier}]: #{e.message}"
+          data["Conditions"] = []
         end
       end
 
-      # Commit securely to our relational database schema
+      # Compile Isolated Sub-Mode Effect Blocks
+      if collected_effects.any?
+        begin
+          raw_yaml = collected_effects.map { |l| l.gsub("`", "") }.join("\n")
+          parsed = YAML.safe_load(raw_yaml)
+
+          if parsed.is_a?(Array)
+            # Squash unified layout array elements into a single combined hash map
+            parsed.each do |item|
+              data["Effects"] = data["Effects"].merge(item) if item.is_a?(Hash)
+            end
+          elsif parsed.is_a?(Hash)
+            data["Effects"] = data["Effects"].merge(parsed)
+          end
+        rescue => e
+          Rails.logger.error "❌ [Importer] Failed to parse Effects for choice [#{identifier}]: #{e.message}"
+        end
+      end
+
+      # Ensure combat checks resolve target_room_slug correctly to the success endpoint
+      final_goto_slug = data["Goto"]
+      if data["Roll Type"].present? && final_goto_slug == room.slug
+        final_goto_slug = data["Success Route"] || data["Goto"]
+      end
+
+      # Persist the clean structural data maps down to ActiveRecord records
       room.choices.create!(
         choice_identifier: identifier,
         text: data["Text"],
-        target_room_slug: data["Goto"],
+        target_room_slug: final_goto_slug,
         risk_level: data["Risk Level"],
         roll_type: data["Roll Type"],
         success_slug: data["Success Route"],
